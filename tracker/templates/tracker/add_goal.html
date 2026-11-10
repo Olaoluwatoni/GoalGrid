@@ -1,0 +1,12 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}Add goal{% endblock %}
+
+{% block content %}
+    <h1>Add a goal</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save goal</button>
+    </form>
+{% endblock %}

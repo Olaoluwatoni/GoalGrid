@@ -1,0 +1,34 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}My goals{% endblock %}
+
+{% block content %}
+    <h1>My goals</h1>
+    <a href="{% url 'add_goal' %}">Add a goal</a>
+
+    <ul>
+        {% for goal in goals %}
+            <li>
+                {% if goal.completed %}
+                    <s>{{ goal.title }}</s>
+                {% else %}
+                    {{ goal.title }}
+                {% endif %}
+
+                <form method="post" action="{% url 'toggle_goal' goal.id %}" style="display:inline">
+                    {% csrf_token %}
+                    <button type="submit">
+                        {% if goal.completed %}Undo{% else %}Done{% endif %}
+                    </button>
+                </form>
+
+                <form method="post" action="{% url 'delete_goal' goal.id %}" style="display:inline">
+                    {% csrf_token %}
+                    <button type="submit">Delete</button>
+                </form>
+            </li>
+        {% empty %}
+            <li>No goals yet.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
