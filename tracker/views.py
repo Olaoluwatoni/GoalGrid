@@ -1,8 +1,11 @@
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
+from django.db.models import F
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
+
 from .forms import GoalForm
 from .models import Goal
 
@@ -25,8 +28,17 @@ def signup(request):
 
 @login_required
 def goals(request):
-    user_goals = Goal.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'tracker/goals.html', {'goals': user_goals})
+    user_goals = Goal.objects.filter(user=request.user).order_by(
+        'completed',
+        F('due_date').asc(nulls_last=True),
+        '-created_at',
+    )
+    return render(request, 'tracker/goals.html', {
+        'goals': user_goals,
+        'total': user_goals.count(),
+        'completed': user_goals.filter(completed=True).count(),
+        'today': timezone.localdate(),
+    })
 
 
 @login_required
@@ -41,6 +53,20 @@ def add_goal(request):
     else:
         form = GoalForm()
     return render(request, 'tracker/add_goal.html', {'form': form})
+
+
+@login_required
+def edit_goal(request, goal_id):
+    goal = get_object_or_404(Goal, id=goal_id, user=request.user)
+    if request.method == 'POST':
+        form = GoalForm(request.POST, instance=goal)
+        if form.is_valid():
+            form.save()
+            return redirect('goals')
+    else:
+        form = GoalForm(instance=goal)
+    return render(request, 'tracker/edit_goal.html', {'form': form})
+
 
 @login_required
 @require_POST

@@ -4,7 +4,13 @@
 
 {% block content %}
     <h1>My goals</h1>
-    <a href="{% url 'add_goal' %}">Add a goal</a>
+
+    {% if total %}
+        <p>{{ completed }} of {{ total }} goals completed</p>
+        <progress value="{{ completed }}" max="{{ total }}"></progress>
+    {% endif %}
+
+    <p><a href="{% url 'add_goal' %}">Add a goal</a></p>
 
     <ul>
         {% for goal in goals %}
@@ -14,6 +20,16 @@
                 {% else %}
                     {{ goal.title }}
                 {% endif %}
+
+                <small>
+                    {{ goal.get_priority_display }}
+                    {% if goal.due_date %} · due {{ goal.due_date }}{% endif %}
+                    {% if goal.due_date and goal.due_date < today and not goal.completed %}
+                        <strong style="color:red">· OVERDUE</strong>
+                    {% endif %}
+                </small>
+
+                <a href="{% url 'edit_goal' goal.id %}">Edit</a>
 
                 <form method="post" action="{% url 'toggle_goal' goal.id %}" style="display:inline">
                     {% csrf_token %}
